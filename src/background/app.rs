@@ -144,6 +144,9 @@ impl SeelenUI {
     }
 
     pub fn is_auto_start_enabled() -> Result<bool> {
+        if cfg!(feature = "manual-launch") {
+            return Ok(false);
+        }
         Com::run_with_context(|| unsafe {
             let task_service: ITaskService = Com::create_instance(&TaskScheduler)?;
             task_service.Connect(
@@ -164,6 +167,13 @@ impl SeelenUI {
     }
 
     pub fn set_auto_start(enabled: bool) -> Result<()> {
+        if cfg!(feature = "manual-launch") {
+            return if enabled {
+                Err("This build supports manual launch only.".into())
+            } else {
+                Ok(())
+            };
+        }
         ServicePipe::request(SvcAction::SetStartup(enabled))
     }
 }

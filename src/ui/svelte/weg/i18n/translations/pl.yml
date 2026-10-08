@@ -1,4 +1,6 @@
 app_menu:
+  pin_on_monitor: Przypnij na tym monitorze
+  unpin_on_monitor: Odepnij z tego monitora
   close: Zamknij
   close_multiple: Zamknij wszystko
   copy_handles: Kopiuj

@@ -1,4 +1,7 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -21,10 +24,35 @@ pub struct WegItemData {
     pub path: PathBuf,
     /// the item will persist after all windows are closed
     pub pinned: bool,
+    /// Per-monitor overrides of the legacy shared pin. Keys are stable monitor IDs.
+    pub pin_overrides: HashMap<String, bool>,
     /// this item should not be pinnable
     pub prevent_pinning: bool,
     /// custom information to relaunch this app, if none, UMID or path should be used
     pub relaunch: Option<Relaunch>,
+}
+
+#[cfg(test)]
+mod monitor_pin_tests {
+    use super::*;
+
+    #[test]
+    fn old_state_preserves_shared_pins() {
+        let item: WegItemData = serde_json::from_str(r#"{"pinned":true}"#).unwrap();
+        assert!(item.pinned);
+        assert!(item.pin_overrides.is_empty());
+    }
+
+    #[test]
+    fn monitor_pins_survive_yaml_roundtrip() {
+        let mut item = WegItemData::default();
+        item.pin_overrides.insert("left-display".into(), true);
+        item.pin_overrides.insert("right-display".into(), false);
+        let restored: WegItemData =
+            serde_yaml::from_str(&serde_yaml::to_string(&item).unwrap()).unwrap();
+        assert_eq!(restored.pin_overrides, item.pin_overrides);
+        assert!(!restored.pinned);
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -167,6 +195,7 @@ impl WegItems {
             umid: data.umid,
             path: data.path,
             pinned: true,
+            pin_overrides: HashMap::new(),
             prevent_pinning: data.pin_disabled,
             relaunch,
         }))

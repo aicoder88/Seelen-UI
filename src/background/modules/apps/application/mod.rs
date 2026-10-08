@@ -1,3 +1,5 @@
+mod monitor_geometry;
+mod monitor_memory;
 pub mod msix;
 pub mod msix_manifest;
 pub mod previews;
@@ -50,7 +52,7 @@ impl UserAppsManager {
     fn add_win(&self, window: &Window) -> bool {
         let hwnd = window.address();
         let is_focused = window.is_focused();
-        self.interactable_windows.get_or_insert_with(
+        let inserted = self.interactable_windows.get_or_insert_with(
             |w| w.hwnd == hwnd,
             || {
                 log::trace!("Adding: {window}");
@@ -60,10 +62,15 @@ impl UserAppsManager {
                 }
                 serialized
             },
-        )
+        );
+        if inserted {
+            monitor_memory::added(window);
+        }
+        inserted
     }
 
     fn remove_win(&self, window: &Window) {
+        monitor_memory::removed(window);
         log::trace!("Removing: {window}");
         let hwnd = window.address();
         self.interactable_windows.retain(|w| w.hwnd != hwnd);

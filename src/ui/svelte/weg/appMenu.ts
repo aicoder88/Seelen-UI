@@ -2,6 +2,8 @@ import { invoke, SeelenCommand, Widget } from "@seelen-ui/lib";
 import type { ContextMenu, ContextMenuItem, UserAppWindow, WidgetId } from "@seelen-ui/lib/types";
 import type { AppOrFileWegItem } from "./types.ts";
 import { dockStateActions } from "./state/items.svelte.ts";
+import { currentMonitorId } from "./state/getters.svelte.ts";
+import { isPinnedOnMonitor } from "./pinning.ts";
 import { fullSettings } from "./state/settings.svelte.ts";
 import { iconPackManager } from "libs/ui/svelte/components/Icon/index.ts";
 import { prefersDarkColorScheme } from "libs/ui/svelte/runes/DarkMode.svelte.ts";
@@ -19,11 +21,7 @@ Widget.self.webview.listen(onAppMenuClick, ({ payload }) => {
   if (!item) return;
 
   if (key === "unpin") {
-    if (windows.length) {
-      dockStateActions.unpinApp(item.id);
-    } else {
-      dockStateActions.remove(item.id);
-    }
+    dockStateActions.unpinApp(item.id);
   } else if (key === "pin") {
     dockStateActions.pinApp(item.id);
   } else if (key === "run") {
@@ -60,12 +58,12 @@ export function getUserApplicationContextMenu(
   const items: ContextMenuItem[] = [];
 
   if (!item.preventPinning) {
-    if (item.pinned) {
+    if (isPinnedOnMonitor(item, currentMonitorId)) {
       items.push({
         type: "Item",
         key: "unpin",
         icon: "RiUnpinLine",
-        label: t("app_menu.unpin"),
+        label: t("app_menu.unpin_on_monitor"),
         callbackEvent: onAppMenuClick,
       });
     } else {
@@ -73,7 +71,7 @@ export function getUserApplicationContextMenu(
         type: "Item",
         key: "pin",
         icon: "RiPushpinLine",
-        label: t("app_menu.pin"),
+        label: t("app_menu.pin_on_monitor"),
         callbackEvent: onAppMenuClick,
       });
     }

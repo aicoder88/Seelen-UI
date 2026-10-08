@@ -149,6 +149,7 @@ fn create_weg_item_from_shortcut(lnk_path: &Path) -> Result<WegItemData> {
         umid,
         path: lnk_path.to_path_buf(),
         pinned: true,
+        pin_overrides: Default::default(),
         prevent_pinning: false,
         relaunch,
     })
@@ -174,6 +175,7 @@ mod tests {
                 umid: None,
                 path: PathBuf::from("C:\\Test\\App.exe"),
                 pinned: true,
+                pin_overrides: Default::default(),
                 prevent_pinning: false,
                 relaunch: None,
             },
@@ -183,6 +185,7 @@ mod tests {
                 umid: None,
                 path: PathBuf::from("C:\\TEST\\APP.EXE"), // Same path, different case
                 pinned: true,
+                pin_overrides: Default::default(),
                 prevent_pinning: false,
                 relaunch: None,
             },
@@ -192,6 +195,7 @@ mod tests {
                 umid: None,
                 path: PathBuf::from("C:\\Other\\App.exe"),
                 pinned: true,
+                pin_overrides: Default::default(),
                 prevent_pinning: false,
                 relaunch: None,
             },

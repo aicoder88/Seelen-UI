@@ -44,7 +44,7 @@ pub fn weg_toggle_window_state(hwnd: isize, was_focused: bool) -> Result<()> {
 }
 
 #[tauri::command(async)]
-pub fn weg_pin_item(path: PathBuf) -> Result<()> {
+pub fn weg_pin_item(path: PathBuf, monitor_id: Option<String>) -> Result<()> {
     if !path.exists() || path.is_dir() {
         return Err("Invalid path".into());
     }
@@ -61,7 +61,8 @@ pub fn weg_pin_item(path: PathBuf) -> Result<()> {
         display_name,
         umid,
         path,
-        pinned: true,
+        pinned: monitor_id.is_none(),
+        pin_overrides: monitor_id.into_iter().map(|id| (id, true)).collect(),
         prevent_pinning: false,
         relaunch: None,
     };

@@ -1,5 +1,8 @@
 // Prevents additional console window on Windows in release
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![cfg_attr(
+    any(not(debug_assertions), feature = "manual-launch"),
+    windows_subsystem = "windows"
+)]
 
 mod app_management;
 mod cli;

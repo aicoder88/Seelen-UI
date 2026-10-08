@@ -52,6 +52,9 @@ impl TaskSchedulerHelper {
 
     /// this task handles the startup of the service and the app on login
     pub fn create_service_task() -> Result<()> {
+        if cfg!(feature = "manual-launch") {
+            return Ok(());
+        }
         log::debug!("Creating service task...");
         let service_path = if was_installed_using_msix() {
             WindowsApi::known_folder(FOLDERID_LocalAppData)?
@@ -104,6 +107,13 @@ impl TaskSchedulerHelper {
     }
 
     pub fn set_run_on_logon(enabled: bool) -> Result<()> {
+        if cfg!(feature = "manual-launch") {
+            return if enabled {
+                Err("This Seelen build supports manual launch only.".into())
+            } else {
+                Ok(())
+            };
+        }
         Com::run_with_context(|| unsafe {
             let task_service = Self::get_task_service()?;
             let seelen_folder = task_service.GetFolder(&GROUP_FOLDER.into())?;
@@ -122,6 +132,9 @@ impl TaskSchedulerHelper {
     }
 
     pub fn remove_service_task() -> Result<()> {
+        if cfg!(feature = "manual-launch") {
+            return Ok(());
+        }
         Com::run_with_context(|| unsafe {
             let task_service: ITaskService = Com::create_instance(&TaskScheduler)?;
             task_service.Connect(

@@ -11,7 +11,7 @@ import { getResourceText } from "libs/ui/react/utils/index.ts";
 import { locale } from "./i18n/index.ts";
 import { dockState, dockStateActions } from "./state/items.svelte.ts";
 import { isHorizontalDock } from "./state/settings.svelte.ts";
-import { plugins } from "./state/getters.svelte.ts";
+import { currentMonitorId, plugins } from "./state/getters.svelte.ts";
 
 const MENU_ID = crypto.randomUUID();
 const PLUGINS_SUBMENU_ID = crypto.randomUUID();
@@ -58,7 +58,7 @@ async function handleBarMenuClick({ key, checked, value }: ContextMenuCallbackPa
         ],
       });
       for (const path of files || []) {
-        await invoke(SeelenCommand.WegPinItem, { path });
+        await invoke(SeelenCommand.WegPinItem, { path, monitorId: currentMonitorId });
       }
       break;
     }

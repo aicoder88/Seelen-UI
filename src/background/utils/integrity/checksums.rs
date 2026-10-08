@@ -41,7 +41,9 @@ async fn try_ensure_bundle_files_integrity(app: &tauri::AppHandle) -> Result<()>
     }
 
     // Skip signature validation in development mode
-    if !tauri::is_dev() {
+    // Locally compiled debug builds cannot carry Seelen's upstream signing signature.
+    // Keep validating every bundled file against the locally generated checksums.
+    if !tauri::is_dev() && !cfg!(all(debug_assertions, feature = "manual-launch")) {
         verify_external_signature(&checksums_path, &signature_path, MINISIGN_PUBLIC_KEY)?;
     }
     validate_directory_checksums(&static_path, &checksums_path).await?;

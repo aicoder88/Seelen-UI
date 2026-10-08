@@ -3,6 +3,7 @@ import { mount } from "svelte";
 import App from "./App.svelte";
 import { SeelenCommand, Widget } from "@seelen-ui/lib";
 import { invoke } from "@tauri-apps/api/core";
+import { currentMonitorId } from "./state/getters.svelte.ts";
 
 import "./styles/variables.css";
 import "@seelen-ui/lib/styles/reset.css";
@@ -17,7 +18,7 @@ mount(App, {
 Widget.self.window.onDragDropEvent(async (e) => {
   if (e.payload.type === "drop") {
     for (const path of e.payload.paths) {
-      await invoke(SeelenCommand.WegPinItem, { path });
+      await invoke(SeelenCommand.WegPinItem, { path, monitorId: currentMonitorId });
     }
   }
 });

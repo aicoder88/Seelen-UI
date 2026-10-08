@@ -2,7 +2,7 @@ pub use slu_ipc::commands::WegCli;
 use slu_ipc::commands::WegCommand;
 
 use seelen_core::{
-    state::{WegItem, WegItemData},
+    state::{WegItem, WegItemData, WegPinnedItemsVisibility, WegTemporalItemsVisibility},
     system_state::UserAppWindow,
 };
 use windows::Win32::UI::WindowsAndMessaging::SW_MINIMIZE;
@@ -10,7 +10,7 @@ use windows::Win32::UI::WindowsAndMessaging::SW_MINIMIZE;
 use crate::{
     error::Result,
     modules::apps::application::USER_APPS_MANAGER,
-    state::application::WEG_ITEMS_MANAGER,
+    state::application::{FULL_STATE, WEG_ITEMS_MANAGER},
     windows_api::{WindowsApi, window::Window},
 };
 
@@ -56,13 +56,39 @@ pub fn process(cmd: WegCli) -> Result<()> {
     #[allow(irrefutable_let_patterns)]
     if let WegCommand::ForegroundOrRunApp { index } = cmd.subcommand {
         let weg_items = WEG_ITEMS_MANAGER.get();
+        let monitor = Window::get_foregrounded().monitor();
+        let monitor_id = monitor.stable_id()?;
+        let state = FULL_STATE.load();
+        let settings = &state.settings.by_widget.weg;
+        let show_pins = settings.pinned_items_visibility == WegPinnedItemsVisibility::Always
+            || monitor.is_primary();
+        let interactables: Vec<_> = USER_APPS_MANAGER
+            .interactable_windows
+            .to_vec()
+            .into_iter()
+            .filter(|window| {
+                settings.temporal_items_visibility == WegTemporalItemsVisibility::All
+                    || window.monitor == monitor_id
+            })
+            .collect();
 
         let all_items: Vec<&WegItem> = weg_items
             .left
             .iter()
             .chain(weg_items.center.iter())
             .chain(weg_items.right.iter())
-            .filter(|item| matches!(item, WegItem::AppOrFile(_)))
+            .filter(|item| match item {
+                WegItem::AppOrFile(data) => {
+                    let pinned_here = data
+                        .pin_overrides
+                        .get(&monitor_id.0)
+                        .copied()
+                        .unwrap_or(data.pinned);
+                    (show_pins && pinned_here)
+                        || !get_windows_for_item(data, &interactables).is_empty()
+                }
+                _ => false,
+            })
             .collect();
 
         if all_items.len() <= index {
@@ -73,7 +99,6 @@ pub fn process(cmd: WegCli) -> Result<()> {
             return Ok(());
         };
 
-        let interactables = USER_APPS_MANAGER.interactable_windows.to_vec();
         let windows = get_windows_for_item(inner_data, &interactables);
 
         if windows.is_empty() {

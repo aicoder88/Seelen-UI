@@ -49,6 +49,9 @@ impl ServicePipe {
     }
 
     fn try_start_from_task_scheduler() -> Result<()> {
+        if cfg!(feature = "manual-launch") {
+            return Err("Manual-launch build: start service directly.".into());
+        }
         Com::run_with_context(|| unsafe {
             let task_service: ITaskService = Com::create_instance(&TaskScheduler)?;
             task_service.Connect(
@@ -89,8 +92,14 @@ impl ServicePipe {
         log::debug!("Can not start service via task scheduler: {err}");
 
         let service_path = Self::service_path()?;
-        let result =
-            WindowsApi::execute(service_path.to_string_lossy().to_string(), None, None, true);
+        // Manual desktop sessions use the current user's privileges by default.
+        let elevate = !cfg!(feature = "manual-launch");
+        let result = WindowsApi::execute(
+            service_path.to_string_lossy().to_string(),
+            None,
+            None,
+            elevate,
+        );
 
         if let Err(err) = result {
             log::error!("First attempt to start service failed: {err}");
@@ -105,7 +114,12 @@ impl ServicePipe {
                 .blocking_show();
 
             if try_again {
-                WindowsApi::execute(service_path.to_string_lossy().to_string(), None, None, true)?;
+                WindowsApi::execute(
+                    service_path.to_string_lossy().to_string(),
+                    None,
+                    None,
+                    elevate,
+                )?;
             }
             return Err(err);
         }

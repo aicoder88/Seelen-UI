@@ -18,6 +18,7 @@
   import { getSeelenWegMenu } from "../dockMenu.ts";
   import { createDragDropManager } from "libs/ui/dnd.ts";
   import type { SwItem } from "../types.ts";
+  import { isPinnedOnMonitor } from "../pinning.ts";
   import DockItemsGroup from "./DockItemsGroup.svelte";
   import WegItemSwitch from "./WegItemSwitch.svelte";
 
@@ -43,7 +44,7 @@
     if (item.type !== "AppOrFile") {
       return showPinned;
     }
-    if (item.pinned && showPinned) {
+    if (isPinnedOnMonitor(item, monitor.id) && showPinned) {
       return true;
     }
     return getWindowsForItem(item as any, windows).length > 0;

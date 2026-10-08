@@ -4,7 +4,8 @@ import { debounce } from "lodash";
 import { emit, listen } from "@tauri-apps/api/event";
 import type { AppOrFileWegItem, SeparatorWegItem } from "../types.ts";
 import { getWindowsForItem, interactables } from "./windows.svelte.ts";
-import { plugins, wegItems } from "./getters.svelte.ts";
+import { currentMonitorId, plugins, wegItems } from "./getters.svelte.ts";
+import { hasAnyPin, withMonitorPin } from "../pinning.ts";
 import { isHorizontalDock } from "./settings.svelte.ts";
 
 interface OptimisticDockState {
@@ -74,7 +75,6 @@ export const dockState = {
 subscribe(SeelenEvent.WegAddItem, (e) => {
   const item: WegItem = {
     ...e.payload,
-    id: crypto.randomUUID(),
     type: "AppOrFile",
   };
 
@@ -159,13 +159,17 @@ export const dockStateActions = {
   pinApp(id: string) {
     _dockState = {
       ..._dockState,
-      items: _dockState.items.map((item) => (item.id === id ? { ...item, pinned: true } : item)),
+      items: _dockState.items.map((
+        item,
+      ) => (item.id === id && item.type === "AppOrFile" ? withMonitorPin(item, currentMonitorId, true) : item)),
     };
   },
   unpinApp(id: string) {
     _dockState = {
       ..._dockState,
-      items: _dockState.items.map((item) => (item.id === id ? { ...item, pinned: false } : item)),
+      items: _dockState.items.map((
+        item,
+      ) => (item.id === id && item.type === "AppOrFile" ? withMonitorPin(item, currentMonitorId, false) : item)),
     };
   },
   addMediaModule() {
@@ -264,7 +268,7 @@ $effect.root(() => {
 
     const itemsToRemove = new Set(
       appOrFileItems
-        .filter((item) => !item.pinned && getWindowsForItem(item, windows).length === 0)
+        .filter((item) => !hasAnyPin(item) && getWindowsForItem(item, windows).length === 0)
         .map((item) => item.id),
     );
 
@@ -289,6 +293,7 @@ $effect.root(() => {
         umid: w.umid ?? null,
         path: w.process.path?.toString() ?? "",
         pinned: false,
+        pinOverrides: {},
         preventPinning: w.preventPinning,
         relaunch: w.relaunch ?? null,
       });

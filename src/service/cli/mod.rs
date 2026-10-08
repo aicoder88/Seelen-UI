@@ -47,6 +47,12 @@ pub async fn handle_console_client() -> Result<()> {
 
     match subcommand {
         Some((ServiceSubcommands::INSTALL, _)) => {
+            if cfg!(feature = "manual-launch") {
+                return Err(
+                    "Manual-launch builds are installed by copying their application folder."
+                        .into(),
+                );
+            }
             add_installation_dir_to_path()?;
             TaskSchedulerHelper::create_service_task()?;
         }

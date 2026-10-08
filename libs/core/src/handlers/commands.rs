@@ -240,7 +240,7 @@ slu_commands_declaration! {
     WegCloseApp = weg_close_app(hwnd: isize),
     WegKillApp = weg_kill_app(hwnd: isize),
     WegToggleWindowState = weg_toggle_window_state(hwnd: isize, was_focused: bool),
-    WegPinItem = weg_pin_item(path: PathBuf),
+    WegPinItem = weg_pin_item(path: PathBuf, monitor_id: Option<String>),
     WegImportPinnedTaskbarItems = weg_import_pinned_taskbar_items() -> usize,
 
     // Windows Manager

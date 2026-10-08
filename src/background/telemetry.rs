@@ -99,6 +99,9 @@ async fn send_event(install_id: Uuid) {
 ///
 /// Errors obtaining the install ID are logged but do not affect the rest of the app.
 pub fn start_telemetry() {
+    if cfg!(feature = "manual-launch") {
+        return;
+    }
     let install_id = match get_or_create_install_id() {
         Ok(id) => id,
         Err(err) => {

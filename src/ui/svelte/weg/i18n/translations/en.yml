@@ -7,6 +7,8 @@ app_menu:
   kill_multiple: Kill All Processes
   open_file_location: Open File Location
   pin: Pin
+  pin_on_monitor: Pin on this monitor
+  unpin_on_monitor: Unpin from this monitor
   pin_to_center: Pin to Center
   pin_to_left: Pin to Left
   pin_to_right: Pin to Right

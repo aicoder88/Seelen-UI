@@ -137,6 +137,14 @@ impl UserAppsManager {
 
         // update cases on UserAppWindow
         if is_interactable {
+            if matches!(
+                event,
+                WinEvent::SystemForeground
+                    | WinEvent::SynDebouncedRectChange
+                    | WinEvent::SystemMoveSizeEnd
+            ) {
+                super::monitor_memory::observed(&window, event == WinEvent::SystemMoveSizeEnd);
+            }
             let mut changed = false;
             USER_APPS_MANAGER.interactable_windows.for_each(|entry| {
                 if entry.hwnd == window.address() {
